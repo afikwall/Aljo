@@ -345,16 +345,17 @@ export const RequiredDocumentCard = ({
                             "flex h-11 flex-1 items-center gap-2 rounded-md border border-input bg-background px-3 text-sm ring-offset-background",
                             "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                             "disabled:cursor-not-allowed disabled:opacity-50",
-                            !inlineExpiry && "text-muted-foreground"
+                            "transition-colors",
+                            inlineExpiry ? "text-primary font-medium" : "text-muted-foreground"
                           )}
                         >
-                          <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                          <CalendarIcon className={cn("h-4 w-4 shrink-0", inlineExpiry ? "text-primary" : "text-muted-foreground")} />
                           {inlineExpiry
                             ? format(inlineExpiry, "MMM dd, yyyy")
                             : "Select expiry date"}
                         </button>
                       </PopoverTrigger>
-                      <PopoverContent className="w-auto p-0" align="start">
+                      <PopoverContent className="w-auto p-3 rounded-xl shadow-lg border" align="start">
                         <Calendar
                           mode="single"
                           selected={inlineExpiry}
@@ -366,6 +367,10 @@ export const RequiredDocumentCard = ({
                           fromYear={new Date().getFullYear()}
                           toYear={new Date().getFullYear() + 10}
                           initialFocus
+                          classNames={{
+                            caption_dropdowns: "flex gap-2 items-center justify-center",
+                            dropdown: "border border-input rounded-md bg-background text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer",
+                          }}
                         />
                       </PopoverContent>
                     </Popover>
@@ -421,14 +426,15 @@ export const RequiredDocumentCard = ({
                               "flex h-11 w-full items-center gap-2 rounded-md border border-input bg-background px-3 text-sm ring-offset-background",
                               "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
                               "disabled:cursor-not-allowed disabled:opacity-50",
-                              !replaceExpiry && "text-muted-foreground"
+                              "transition-colors",
+                              replaceExpiry ? "text-primary font-medium" : "text-muted-foreground"
                             )}
                           >
-                            <CalendarIcon className="h-4 w-4 shrink-0 text-muted-foreground" />
+                            <CalendarIcon className={cn("h-4 w-4 shrink-0", replaceExpiry ? "text-primary" : "text-muted-foreground")} />
                             {replaceExpiry ? format(replaceExpiry, "MMM dd, yyyy") : "Select expiry date"}
                           </button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
+                        <PopoverContent className="w-auto p-3 rounded-xl shadow-lg border" align="start">
                           <Calendar
                             mode="single"
                             selected={replaceExpiry}
@@ -440,6 +446,10 @@ export const RequiredDocumentCard = ({
                             fromYear={new Date().getFullYear()}
                             toYear={new Date().getFullYear() + 10}
                             initialFocus
+                            classNames={{
+                              caption_dropdowns: "flex gap-2 items-center justify-center",
+                              dropdown: "border border-input rounded-md bg-background text-sm px-2 py-1 focus:outline-none focus:ring-2 focus:ring-ring cursor-pointer",
+                            }}
                           />
                         </PopoverContent>
                       </Popover>
