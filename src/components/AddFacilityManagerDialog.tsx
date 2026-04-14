@@ -1,6 +1,7 @@
 import { useState, useCallback } from "react";
-import { useEntityCreate } from "@blocksdiy/blocks-client-sdk/reactSdk";
-import { FacilityManagerProfilesEntity } from "@/product-types";
+import { useEntityCreate, useExecuteAction } from "@blocksdiy/blocks-client-sdk/reactSdk";
+import { FacilityManagerProfilesEntity, InviteFacilityManagerAction } from "@/product-types";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -38,6 +39,8 @@ export const AddFacilityManagerDialog = ({
   const { createFunction, isLoading } = useEntityCreate(
     FacilityManagerProfilesEntity
   );
+
+  const { executeFunction: executeInvite } = useExecuteAction(InviteFacilityManagerAction);
 
   const resetForm = useCallback(() => {
     setEmail("");
@@ -83,12 +86,23 @@ export const AddFacilityManagerDialog = ({
         },
       });
 
+      try {
+        await executeInvite({
+          email: trimmedEmail,
+          facilityProfileId: facilityId,
+          facilityName,
+          name: name.trim() || undefined,
+        });
+      } catch {
+        toast.warning("Profile created, but invite email could not be sent. Use the mail button to retry.");
+      }
+
       setSuccessEmail(trimmedEmail);
       onSuccess();
     } catch {
       setErrorMessage("An error occurred while creating the profile. Please try again.");
     }
-  }, [email, name, phone, facilityId, createFunction, onSuccess]);
+  }, [email, name, phone, facilityId, facilityName, createFunction, executeInvite, onSuccess]);
 
   const handleDone = useCallback(() => {
     resetForm();
