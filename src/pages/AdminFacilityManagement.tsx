@@ -889,21 +889,19 @@ export default function AdminFacilityManagementPage() {
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="status">Status</Label>
-                  <Select
-                    value={facilityForm.status}
-                    onValueChange={(value: "active" | "inactive") =>
-                      setFacilityForm({ ...facilityForm, status: value })
-                    }
-                  >
-                    <SelectTrigger id="status">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="active">Active</SelectItem>
-                      <SelectItem value="inactive">Inactive</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Status</Label>
+                  <div className="flex items-center gap-3 min-h-[44px]">
+                    <Switch
+                      id="status"
+                      checked={facilityForm.status === "active"}
+                      onCheckedChange={(checked) =>
+                        setFacilityForm({ ...facilityForm, status: checked ? "active" : "inactive" })
+                      }
+                    />
+                    <span className={facilityForm.status === "active" ? "text-sm font-medium text-accent" : "text-sm font-medium text-muted-foreground"}>
+                      {facilityForm.status === "active" ? "Active" : "Inactive"}
+                    </span>
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="city">
