@@ -1,5 +1,5 @@
 import React from "react";
-import { useUser, useEntityGetAll } from "@blocksdiy/blocks-client-sdk/reactSdk";
+import { useUser, useEntityGetAll, useEntityGetOne } from "@blocksdiy/blocks-client-sdk/reactSdk";
 import { Link, useLocation, useNavigate } from "react-router";
 import { getPageUrl, logOut } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -85,9 +85,11 @@ import {
   MessagesEntity,
   StaffProfilesEntity,
   FacilityManagerProfilesEntity,
+  FacilitiesEntity,
 } from "@/product-types";
 import { useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { Skeleton } from "@/components/ui/skeleton";
 import { Settings, TrendingUp } from "lucide-react";
 import {
   type MessageInstance,
@@ -115,6 +117,15 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     FacilityManagerProfilesEntity,
     { email: user.email },
     { enabled: user.isAuthenticated && user.role === "facility_manager" }
+  );
+
+  const fmProfile = fmProfilesData?.[0] as any;
+  const facilityProfileId = fmProfile?.facilityProfileId;
+
+  const { data: facilityData, isLoading: facilityLoading } = useEntityGetOne(
+    FacilitiesEntity,
+    { id: facilityProfileId },
+    { enabled: user.isAuthenticated && user.role === "facility_manager" && !!facilityProfileId }
   );
 
   const adminDashboardUrl = getPageUrl(AdminDashboardPage);
@@ -405,6 +416,24 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
+          {user.role === "facility_manager" && !isMobile && (
+            <div className="mx-2 mt-2">
+              {facilityLoading ? (
+                <div className="rounded-lg bg-sidebar-accent/40 px-3 py-2.5">
+                  <Skeleton className="h-3 w-20 mb-1.5" />
+                  <Skeleton className="h-4 w-32" />
+                </div>
+              ) : (facilityData as any)?.name ? (
+                <div className="rounded-lg bg-sidebar-accent/40 px-3 py-2.5">
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <Building2 className="h-3.5 w-3.5 text-sidebar-primary" />
+                    <span className="text-xs uppercase tracking-wide text-sidebar-foreground/50">Your Facility</span>
+                  </div>
+                  <p className="text-sm font-semibold text-sidebar-foreground truncate">{(facilityData as any).name}</p>
+                </div>
+              ) : null}
+            </div>
+          )}
         </SidebarContent>
         <SidebarFooter>
           <SidebarMenu>
