@@ -900,6 +900,36 @@ export const FullStaffProfilePanel = ({
                         Exp: {format(parseISO(latestDoc.expiryDate), "MMM yyyy")}
                       </span>
                     )}
+                    {latestDoc?.reviewStatus === "approved" && latestDoc?.fileUrl && (
+                      <div className="flex items-center gap-1 shrink-0">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleViewDocument(latestDoc as IStaffDocumentsEntity & { id: string })}
+                          className="h-7 w-7 p-0"
+                          disabled={loadingPreviewId === latestDoc.id}
+                        >
+                          {loadingPreviewId === latestDoc.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Eye className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownloadDocument(latestDoc as IStaffDocumentsEntity & { id: string })}
+                          className="h-7 w-7 p-0"
+                          disabled={loadingDownloadId === latestDoc.id}
+                        >
+                          {loadingDownloadId === latestDoc.id ? (
+                            <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                          ) : (
+                            <Download className="h-3.5 w-3.5" />
+                          )}
+                        </Button>
+                      </div>
+                    )}
                   </div>
                 );
               })}
@@ -1061,6 +1091,36 @@ export const FullStaffProfilePanel = ({
                           {getDocumentDisplayName(doc)}
                         </span>
                         <ReviewStatusBadge status={getDocumentStatus(doc)} />
+                        {doc.reviewStatus === "approved" && doc.fileUrl && (
+                          <div className="flex items-center gap-1 shrink-0">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleViewDocument(doc as IStaffDocumentsEntity & { id: string })}
+                              className="h-7 w-7 p-0"
+                              disabled={loadingPreviewId === doc.id}
+                            >
+                              {loadingPreviewId === doc.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Eye className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => handleDownloadDocument(doc as IStaffDocumentsEntity & { id: string })}
+                              className="h-7 w-7 p-0"
+                              disabled={loadingDownloadId === doc.id}
+                            >
+                              {loadingDownloadId === doc.id ? (
+                                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                              ) : (
+                                <Download className="h-3.5 w-3.5" />
+                              )}
+                            </Button>
+                          </div>
+                        )}
                       </div>
                     ))}
                   </div>
