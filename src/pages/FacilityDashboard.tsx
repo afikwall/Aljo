@@ -25,7 +25,7 @@ import { OrientationRequestsSection } from "@/components/OrientationRequestsSect
 import { StaffActivityCard } from "@/components/StaffActivityCard";
 import { FMStaffDocumentsSheet } from "@/components/FMStaffDocumentsSheet";
 import { Calendar, Clock, CheckCircle, Plus, AlertCircle } from "lucide-react";
-import { useState, useMemo, useEffect, useCallback } from "react";
+import { useState, useMemo, useCallback } from "react";
 import {
   isToday,
   parseISO,
@@ -42,11 +42,23 @@ import { GeofenceSettingsCard } from "@/components/GeofenceSettingsCard";
 import { FacilityRatesSection } from "@/components/FacilityRatesSection";
 import { getPageUrl } from "@/lib/utils";
 import { toast } from "sonner";
+import { useEffect } from "react";
 
 export const pageIcon = "layout-dashboard";
 
-export default function FacilityDashboardPage() {
-  const user = useUser();
+interface FacilityDashboardContentProps {
+  facilityProfileId: string;
+  activeFacilityName: string;
+  managerProfile: NonNullable<ReturnType<typeof useFacilitySwitcher>["activeProfile"]>;
+  user: ReturnType<typeof useUser>;
+}
+
+function FacilityDashboardContent({
+  facilityProfileId,
+  activeFacilityName,
+  managerProfile,
+  user,
+}: FacilityDashboardContentProps) {
   const navigate = useNavigate();
 
   // Filters
@@ -62,25 +74,10 @@ export default function FacilityDashboardPage() {
   const [fmStaffSheetOpen, setFmStaffSheetOpen] = useState(false);
   const [selectedFMStaffId, setSelectedFMStaffId] = useState<string | null>(null);
 
-  useEffect(() => {
-    if (!user.isAuthenticated) {
-      navigate(getPageUrl(LoginPage));
-    }
-  }, [user.isAuthenticated, navigate]);
-
-  if (!user.isAuthenticated) {
-    return null;
-  }
-
-  // Fetch manager profile via facility switcher
-  const { activeProfile, activeFacilityId, activeFacilityName, isLoading: loadingProfile } = useFacilitySwitcher(user.email || "", user.isAuthenticated);
-  const managerProfile = activeProfile;
-  const facilityProfileId = activeFacilityId;
-
   // Fetch facility details
   const { data: facility } = useEntityGetOne(
     FacilitiesEntity,
-    { id: facilityProfileId || "" },
+    { id: facilityProfileId },
     { enabled: !!facilityProfileId }
   );
 
@@ -94,7 +91,6 @@ export default function FacilityDashboardPage() {
     { facilityProfileId },
     { enabled: !!facilityProfileId }
   );
-
 
   // Fetch all staff profiles for the popup
   const { data: allStaffProfiles } = useEntityGetAll(StaffProfilesEntity);
@@ -240,55 +236,11 @@ export default function FacilityDashboardPage() {
     setFmStaffSheetOpen(true);
   }, []);
 
-  // Loading state
-  if (loadingProfile) {
-    return (
-      <div className="space-y-6 p-4 md:p-6">
-        <Skeleton className="h-12 w-64" />
-        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-          <Skeleton className="h-32" />
-        </div>
-      </div>
-    );
-  }
-
-  // No profile
-  if (!managerProfile) {
-    return (
-      <div className="flex min-h-screen items-center justify-center p-4">
-        <Card className="w-full max-w-md">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertCircle className="h-5 w-5 text-chart-3" />
-              Profile Setup Required
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-muted-foreground mb-4">
-              Your facility manager profile hasn&apos;t been set up yet. Please
-              contact your administrator to complete your profile setup.
-            </p>
-            <div className="rounded-lg bg-muted p-4">
-              <p className="text-sm font-medium mb-2">What you&apos;ll need:</p>
-              <ul className="text-sm text-muted-foreground list-disc list-inside flex flex-col gap-1">
-                <li>Facility assignment</li>
-                <li>Contact information</li>
-                <li>Position details</li>
-              </ul>
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   const isLoading = loadingShifts;
   const postShiftPageUrl = getPageUrl(FacilityPostShiftPage);
 
   return (
-    <div key={activeFacilityId} className="space-y-6 p-4 md:p-6">
+    <div className="space-y-6 p-4 md:p-6">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
@@ -464,5 +416,77 @@ export default function FacilityDashboardPage() {
         isCancelling={isCancelling}
       />
     </div>
+  );
+}
+
+export default function FacilityDashboardPage() {
+  const user = useUser();
+  const navigate = useNavigate();
+
+  const { activeProfile, activeFacilityId, activeFacilityName, isLoading: loadingProfile } = useFacilitySwitcher(user.email || "", user.isAuthenticated);
+  const managerProfile = activeProfile;
+
+  useEffect(() => {
+    if (!user.isAuthenticated) {
+      navigate(getPageUrl(LoginPage));
+    }
+  }, [user.isAuthenticated, navigate]);
+
+  if (!user.isAuthenticated) {
+    return null;
+  }
+
+  // Loading state
+  if (loadingProfile) {
+    return (
+      <div className="space-y-6 p-4 md:p-6">
+        <Skeleton className="h-12 w-64" />
+        <div className="grid gap-4 grid-cols-1 md:grid-cols-3">
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+          <Skeleton className="h-32" />
+        </div>
+      </div>
+    );
+  }
+
+  // No profile
+  if (!managerProfile) {
+    return (
+      <div className="flex min-h-screen items-center justify-center p-4">
+        <Card className="w-full max-w-md">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <AlertCircle className="h-5 w-5 text-chart-3" />
+              Profile Setup Required
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <p className="text-muted-foreground mb-4">
+              Your facility manager profile hasn&apos;t been set up yet. Please
+              contact your administrator to complete your profile setup.
+            </p>
+            <div className="rounded-lg bg-muted p-4">
+              <p className="text-sm font-medium mb-2">What you&apos;ll need:</p>
+              <ul className="text-sm text-muted-foreground list-disc list-inside flex flex-col gap-1">
+                <li>Facility assignment</li>
+                <li>Contact information</li>
+                <li>Position details</li>
+              </ul>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <FacilityDashboardContent
+      key={activeFacilityId}
+      facilityProfileId={activeFacilityId!}
+      activeFacilityName={activeFacilityName || ""}
+      managerProfile={managerProfile}
+      user={user}
+    />
   );
 }
