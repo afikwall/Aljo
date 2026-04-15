@@ -1,8 +1,8 @@
-import { useEntityGetAll, useEntityCreate, useEntityUpdate } from "@blocksdiy/blocks-client-sdk/reactSdk";
+import { useEntityGetAll, useEntityCreate, useEntityUpdate, useEntityDelete } from "@blocksdiy/blocks-client-sdk/reactSdk";
 import { RoleTypesEntity } from "@/product-types";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -17,7 +17,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Stethoscope, Plus, Edit2, Shield } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import { Stethoscope, Plus, Edit2, Shield, Trash2, Loader2 } from "lucide-react";
 import { useState, useMemo } from "react";
 import { toast } from "sonner";
 
@@ -25,8 +36,10 @@ export default function AdminSettingsPage() {
   const { data: roleTypes, isLoading: loadingRoleTypes, refetch: refetchRoleTypes } = useEntityGetAll(RoleTypesEntity);
   const { createFunction: createRoleType, isLoading: creatingRoleType } = useEntityCreate(RoleTypesEntity);
   const { updateFunction: updateRoleType, isLoading: updatingRoleType } = useEntityUpdate(RoleTypesEntity);
+  const { deleteFunction: deleteRoleType } = useEntityDelete(RoleTypesEntity);
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
   const [editingRoleType, setEditingRoleType] = useState<typeof RoleTypesEntity['instanceType'] | null>(null);
   const [formData, setFormData] = useState({
     code: "",
@@ -117,7 +130,6 @@ export default function AdminSettingsPage() {
       refetchRoleTypes();
     } catch (error) {
       toast.error("Failed to save role type");
-      console.error(error);
     }
   };
 
@@ -142,7 +154,6 @@ export default function AdminSettingsPage() {
       refetchRoleTypes();
     } catch (error) {
       toast.error("Failed to update role type status");
-      console.error(error);
     }
   };
 
@@ -158,6 +169,20 @@ export default function AdminSettingsPage() {
       ...formData,
       claimableRoles: { codes: newCodes },
     });
+  };
+
+  const handleDelete = async (roleType: typeof RoleTypesEntity['instanceType']) => {
+    if (!roleType.id) return;
+    setDeletingId(roleType.id);
+    try {
+      await deleteRoleType({ id: roleType.id });
+      toast.success("Role type deleted successfully");
+      refetchRoleTypes();
+    } catch {
+      toast.error("Failed to delete role type");
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const isLoading = creatingRoleType || updatingRoleType;
@@ -251,6 +276,7 @@ export default function AdminSettingsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleOpenEditDialog(roleType)}
+                          disabled={deletingId === roleType.id}
                         >
                           <Edit2 className="h-4 w-4" />
                         </Button>
@@ -258,9 +284,43 @@ export default function AdminSettingsPage() {
                           variant="ghost"
                           size="sm"
                           onClick={() => handleToggleActive(roleType)}
+                          disabled={deletingId === roleType.id}
                         >
                           {roleType.isActive ? "Deactivate" : "Activate"}
                         </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-destructive hover:text-destructive"
+                              disabled={deletingId === roleType.id}
+                            >
+                              {deletingId === roleType.id ? (
+                                <Loader2 className="animate-spin" />
+                              ) : (
+                                <Trash2 />
+                              )}
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you sure you want to delete this role type?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. The role type '{roleType.code}' will be permanently deleted.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                className={buttonVariants({ variant: "destructive" })}
+                                onClick={() => handleDelete(roleType)}
+                              >
+                                Delete
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       </div>
                     </div>
                   </CardContent>
