@@ -31,6 +31,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   LayoutDashboard,
   User,
+  MoreHorizontal,
   Building2,
   Users,
   LogOut as LogOutIcon,
@@ -265,7 +266,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   if (isMobile) {
     return (
-      <div className="flex min-h-screen flex-col pb-16">
+      <div className="flex min-h-screen flex-col pb-14">
         <header className="sticky top-0 z-40 flex h-12 items-center justify-between border-b bg-background px-4">
           <span className="text-sm font-semibold">ALJO CareCrew</span>
           <NotificationBell />
@@ -274,9 +275,9 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
           {children}
         </main>
 
-        {/* Mobile Bottom Tab Bar - first 5 items */}
+        {/* Mobile Bottom Tab Bar - icons only */}
         <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card shadow-lg">
-          <div className="flex h-16 items-center justify-around px-2">
+          <div className="flex h-14 items-center justify-around px-2">
             {navigationItems.slice(0, 5).map((item) => {
               const isActive = location.pathname?.startsWith(item.url) && item.url !== "#";
               const Icon = item.icon;
@@ -285,22 +286,25 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
                 <Link
                   key={item.title}
                   to={item.url}
+                  title={item.title}
                   className={cn(
-                    "relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-2 py-1.5 transition-colors",
+                    "relative flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center rounded-lg transition-colors",
                     isActive
-                      ? "bg-primary/10 text-primary"
-                      : "text-muted-foreground hover:text-foreground"
+                      ? "text-primary"
+                      : "text-muted-foreground hover:bg-primary/5 hover:text-foreground"
                   )}
                 >
                   <div className="relative">
-                    <Icon className={cn("h-5 w-5 shrink-0", isActive && "text-primary")} />
+                    <Icon className={cn("size-5 shrink-0 transition-colors", isActive && "text-primary")} />
                     {item.badge && (
                       <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                         {item.badge}
                       </span>
                     )}
                   </div>
-                  <span className="truncate text-xs font-medium">{item.title}</span>
+                  {isActive && (
+                    <div className="mt-1 h-0.5 w-6 rounded-full bg-primary" />
+                  )}
                 </Link>
               );
             })}
@@ -308,16 +312,20 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
             {/* More Tab */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="relative flex min-w-0 flex-1 flex-col items-center justify-center gap-1 rounded-lg px-2 py-1.5 text-muted-foreground transition-colors hover:text-foreground">
+                <button
+                  title="More"
+                  className={cn(
+                    "relative flex min-h-[44px] min-w-0 flex-1 flex-col items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-primary/5 hover:text-foreground"
+                  )}
+                >
                   <div className="relative">
-                    <User className="h-5 w-5 shrink-0" />
+                    <MoreHorizontal className="size-5 shrink-0" />
                     {navigationItems.slice(5).some((i) => i.badge) && (
                       <span className="absolute -right-2.5 -top-1.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-destructive px-1 text-[10px] font-bold text-destructive-foreground">
                         {navigationItems.slice(5).find((i) => i.badge)?.badge}
                       </span>
                     )}
                   </div>
-                  <span className="truncate text-xs font-medium">More</span>
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-64">
