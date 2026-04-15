@@ -4,6 +4,7 @@ import {
   useEntityGetAll,
   useEntityCreate,
   useEntityUpdate,
+  useEntityDelete,
   useFileUpload,
   useExecuteAction,
 } from "@blocksdiy/blocks-client-sdk/reactSdk";
@@ -98,6 +99,7 @@ function StaffMyDocumentsContent() {
     useEntityCreate(StaffDocumentsEntity);
   const { updateFunction, isLoading: isUpdating } =
     useEntityUpdate(StaffDocumentsEntity);
+  const { deleteFunction } = useEntityDelete(StaffDocumentsEntity);
   const { uploadFunction, isLoading: isUploading } = useFileUpload();
   const { executeFunction: getSignedUrl } = useExecuteAction(
     GetSignedFileUrlAction
@@ -180,6 +182,16 @@ function StaffMyDocumentsContent() {
       if (!staffProfile?.id) return;
       setUploadingType(docType);
       try {
+        const existingDocs = documentsByType[docType] || [];
+        for (const doc of existingDocs) {
+          try {
+            await deleteFunction({ id: doc.id });
+          } catch {
+            toast.error("Failed to remove old document. Upload aborted.");
+            setUploadingType(null);
+            return;
+          }
+        }
         const fileUrl = await uploadFunction(file);
         await createFunction({
           data: {
@@ -201,7 +213,7 @@ function StaffMyDocumentsContent() {
         setUploadingType(null);
       }
     },
-    [staffProfile?.id, uploadFunction, createFunction, refetchDocuments]
+    [staffProfile?.id, uploadFunction, createFunction, deleteFunction, documentsByType, refetchDocuments]
   );
 
   const handleReplaceUpload = useCallback(
@@ -213,14 +225,23 @@ function StaffMyDocumentsContent() {
     ) => {
       setReplacingDocId(docId);
       try {
+        try {
+          await deleteFunction({ id: docId });
+        } catch {
+          toast.error("Failed to remove old document. Replace aborted.");
+          setReplacingDocId(null);
+          return;
+        }
         const fileUrl = await uploadFunction(file);
-        await updateFunction({
-          id: docId,
+        await createFunction({
           data: {
+            staffProfileId: staffProfile?.id,
+            documentType: docType,
             fileUrl,
             fileName: file.name,
             reviewStatus: "pending_review",
-            rejectionReason: "",
+            isRequired: true,
+            documentCategory: DOCUMENT_TYPE_TO_CATEGORY[docType],
             ...(expiryDate ? { expiryDate } : {}),
           },
         });
@@ -232,7 +253,7 @@ function StaffMyDocumentsContent() {
         setReplacingDocId(null);
       }
     },
-    [uploadFunction, updateFunction, refetchDocuments]
+    [uploadFunction, createFunction, deleteFunction, staffProfile?.id, refetchDocuments]
   );
 
   // --- Optional doc handlers ---
