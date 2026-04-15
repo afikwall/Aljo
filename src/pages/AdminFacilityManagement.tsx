@@ -482,20 +482,26 @@ export default function AdminFacilityManagementPage() {
                       >
                         {facility.status === "active" ? "Active" : "Inactive"}
                       </Badge>
-                      {facility.latitude === 0 && facility.longitude === 0 ? (
-                        <Badge className="bg-chart-3/20 text-chart-3">
-                          <AlertTriangle className="h-3 w-3 mr-1" />
-                          0,0 coords
-                        </Badge>
-                      ) : facility.latitude != null && facility.longitude != null && (facility.geofenceMode === "strict" || facility.geofenceMode === "flag") ? (
+                      {facility.geofenceMode === "flag" ? (
                         <Badge className="bg-accent/20 text-accent">
                           <MapPin className="h-3 w-3 mr-1" />
-                          Geofence
+                          Flag
+                        </Badge>
+                      ) : facility.geofenceMode === "strict" ? (
+                        <Badge className="bg-primary/20 text-primary">
+                          <MapPin className="h-3 w-3 mr-1" />
+                          Strict
                         </Badge>
                       ) : (
                         <Badge className="bg-muted text-muted-foreground">
                           <MapPinOff className="h-3 w-3 mr-1" />
-                          No fence
+                          Off
+                        </Badge>
+                      )}
+                      {facility.latitude === 0 && facility.longitude === 0 && (
+                        <Badge className="bg-chart-3/20 text-chart-3">
+                          <AlertTriangle className="h-3 w-3 mr-1" />
+                          0,0 coords
                         </Badge>
                       )}
                       <TooltipProvider>
@@ -578,20 +584,26 @@ export default function AdminFacilityManagementPage() {
                     </Badge>
                   </TableCell>
                   <TableCell>
-                    {facility.latitude === 0 && facility.longitude === 0 ? (
-                      <span className="flex items-center gap-1 text-chart-3 text-xs">
-                        <AlertTriangle className="h-3 w-3" />
-                        0,0
-                      </span>
-                    ) : facility.latitude != null && facility.longitude != null && (facility.geofenceMode === "strict" || facility.geofenceMode === "flag") ? (
+                    {facility.geofenceMode === "flag" ? (
                       <Badge className="bg-accent/20 text-accent">
                         <MapPin className="h-3 w-3 mr-1" />
-                        {facility.geofenceMode}
+                        Flag
+                      </Badge>
+                    ) : facility.geofenceMode === "strict" ? (
+                      <Badge className="bg-primary/20 text-primary">
+                        <MapPin className="h-3 w-3 mr-1" />
+                        Strict
                       </Badge>
                     ) : (
                       <span className="flex items-center gap-1 text-muted-foreground text-xs">
                         <MapPinOff className="h-3 w-3" />
                         Off
+                      </span>
+                    )}
+                    {facility.latitude === 0 && facility.longitude === 0 && (
+                      <span className="flex items-center gap-1 text-chart-3 text-xs mt-1">
+                        <AlertTriangle className="h-3 w-3" />
+                        0,0
                       </span>
                     )}
                   </TableCell>
