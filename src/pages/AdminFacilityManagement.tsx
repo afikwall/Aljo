@@ -187,13 +187,30 @@ export default function AdminFacilityManagementPage() {
 
       const fetchResults = async (query: string) => {
         const response = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=ca&q=${encodeURIComponent(query)}&limit=1`
+          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&q=${encodeURIComponent(query)}&limit=1`
         );
         return response.json();
       };
 
+      // Attempt 1: full query (address + city + province if not already included)
       let results = await fetchResults(fullQuery);
 
+      // Attempt 2: reverse token order of address field (helps "city street number" → "number street city")
+      if (!results?.length) {
+        const reversedAddress = facilityForm.address.split(" ").reverse().join(" ");
+        const reversedExtra: string[] = [];
+        const reversedLower = reversedAddress.toLowerCase();
+        if (facilityForm.city && !reversedLower.includes(facilityForm.city.toLowerCase())) {
+          reversedExtra.push(facilityForm.city);
+        }
+        if (facilityForm.province && !reversedLower.includes(facilityForm.province.toLowerCase())) {
+          reversedExtra.push(facilityForm.province);
+        }
+        const reversedQuery = [reversedAddress, ...reversedExtra].join(", ");
+        results = await fetchResults(reversedQuery);
+      }
+
+      // Attempt 3: raw address string alone
       if (!results?.length && fullQuery !== facilityForm.address) {
         results = await fetchResults(facilityForm.address);
       }
