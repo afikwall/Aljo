@@ -7,13 +7,13 @@ import {
 import { useNavigate } from "react-router";
 import { Link } from "react-router";
 import {
-  FacilityManagerProfilesEntity,
   FacilitiesEntity,
   ShiftsEntity,
   StaffProfilesEntity,
   LoginPage,
   FacilityPostShiftPage,
 } from "@/product-types";
+import { useFacilitySwitcher } from "@/hooks/useFacilitySwitcher";
 import type { IShiftsEntity, IStaffProfilesEntity } from "@/product-types";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -72,13 +72,10 @@ export default function FacilityDashboardPage() {
     return null;
   }
 
-  // Fetch manager profile
-  const { data: managerProfiles, isLoading: loadingProfile } = useEntityGetAll(
-    FacilityManagerProfilesEntity,
-    { email: user.email }
-  );
-  const managerProfile = managerProfiles?.[0];
-  const facilityProfileId = managerProfile?.facilityProfileId;
+  // Fetch manager profile via facility switcher
+  const { activeProfile, activeFacilityId, activeFacilityName, isLoading: loadingProfile } = useFacilitySwitcher(user.email || "", user.isAuthenticated);
+  const managerProfile = activeProfile;
+  const facilityProfileId = activeFacilityId;
 
   // Fetch facility details
   const { data: facility } = useEntityGetOne(
@@ -97,6 +94,15 @@ export default function FacilityDashboardPage() {
     { facilityProfileId },
     { enabled: !!facilityProfileId }
   );
+
+  // Listen for facility switch events
+  useEffect(() => {
+    const handler = () => {
+      refetchShifts();
+    };
+    window.addEventListener("aljo_facility_changed", handler);
+    return () => window.removeEventListener("aljo_facility_changed", handler);
+  }, [refetchShifts]);
 
   // Fetch all staff profiles for the popup
   const { data: allStaffProfiles } = useEntityGetAll(StaffProfilesEntity);
@@ -295,7 +301,7 @@ export default function FacilityDashboardPage() {
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
         <p className="text-muted-foreground mt-1">
-          Manage your facility&apos;s shifts and staffing
+          {activeFacilityName ? `Managing: ${activeFacilityName}` : "Manage your facility's shifts and staffing"}
         </p>
       </div>
 

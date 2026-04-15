@@ -1,8 +1,9 @@
 import React from "react";
-import { useUser, useEntityGetAll, useEntityGetOne } from "@blocksdiy/blocks-client-sdk/reactSdk";
+import { useUser, useEntityGetAll } from "@blocksdiy/blocks-client-sdk/reactSdk";
 import { Link, useLocation, useNavigate } from "react-router";
 import { getPageUrl, logOut } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useFacilitySwitcher } from "@/hooks/useFacilitySwitcher";
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +26,9 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -51,6 +55,9 @@ import {
   ClipboardCheck,
   FileSpreadsheet,
   Wallet,
+  ChevronsUpDown,
+  CheckCircle,
+  ArrowLeftRight,
 } from "lucide-react";
 import {
   ProfilePage,
@@ -85,8 +92,6 @@ import {
   StaffTimesheetPage,
   MessagesEntity,
   StaffProfilesEntity,
-  FacilityManagerProfilesEntity,
-  FacilitiesEntity,
 } from "@/product-types";
 import { useMemo, useEffect } from "react";
 import { cn } from "@/lib/utils";
@@ -114,19 +119,18 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     { email: user.email },
     { enabled: user.isAuthenticated && user.role === "staff" }
   );
-  const { data: fmProfilesData } = useEntityGetAll(
-    FacilityManagerProfilesEntity,
-    { email: user.email },
-    { enabled: user.isAuthenticated && user.role === "facility_manager" }
-  );
 
-  const fmProfile = fmProfilesData?.[0] as any;
-  const facilityProfileId = fmProfile?.facilityProfileId;
-
-  const { data: facilityData, isLoading: facilityLoading } = useEntityGetOne(
-    FacilitiesEntity,
-    { id: facilityProfileId },
-    { enabled: user.isAuthenticated && user.role === "facility_manager" && !!facilityProfileId }
+  const {
+    allProfiles: fmAllProfiles,
+    activeProfile: fmActiveProfile,
+    activeFacilityId: fmActiveFacilityId,
+    activeFacilityName: fmActiveFacilityName,
+    setActiveFacilityId: fmSetActiveFacilityId,
+    isLoading: fmLoading,
+    isMultiFacility: fmIsMultiFacility,
+  } = useFacilitySwitcher(
+    user.email || "",
+    user.isAuthenticated && user.role === "facility_manager"
   );
 
   const adminDashboardUrl = getPageUrl(AdminDashboardPage);
@@ -163,12 +167,11 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
 
     if (user.role === "facility_manager") {
-      const fmProfile = fmProfilesData?.[0] as any;
       const directUnread = countUnreadDirect(messages, user.email);
       const broadcastUnread = countUnreadBroadcasts(
         messages,
-        fmProfile?.lastViewedMessagesDate,
-        fmProfile?.facilityProfileId
+        (fmActiveProfile as any)?.lastViewedMessagesDate,
+        (fmActiveProfile as any)?.facilityProfileId
       );
       return directUnread + broadcastUnread;
     }
@@ -178,7 +181,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
     }
 
     return 0;
-  }, [user, allMessages, staffProfilesData, fmProfilesData]);
+  }, [user, allMessages, staffProfilesData, fmActiveProfile]);
 
   const unreadBadgeText = useMemo(
     () => formatUnreadCount(unreadCount),
@@ -371,7 +374,34 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
                 {navigationItems.length > 5 && <DropdownMenuSeparator />}
 
-                <DropdownMenuSeparator />
+                {/* Facility Switcher for mobile */}
+                {user.role === "facility_manager" && fmIsMultiFacility && (
+                  <>
+                    <DropdownMenuSub>
+                      <DropdownMenuSubTrigger>
+                        <ArrowLeftRight className="mr-2 h-4 w-4" />
+                        Switch Facility
+                      </DropdownMenuSubTrigger>
+                      <DropdownMenuSubContent>
+                        {fmAllProfiles.map((profile: any) => (
+                          <DropdownMenuItem
+                            key={profile.facilityProfileId}
+                            onClick={() => fmSetActiveFacilityId(profile.facilityProfileId)}
+                          >
+                            {profile.facilityProfileId === fmActiveFacilityId && (
+                              <CheckCircle className="mr-2 h-4 w-4 text-primary" />
+                            )}
+                            <span className={profile.facilityProfileId !== fmActiveFacilityId ? "ml-6" : ""}>
+                              {profile.facilityName}
+                            </span>
+                          </DropdownMenuItem>
+                        ))}
+                      </DropdownMenuSubContent>
+                    </DropdownMenuSub>
+                    <DropdownMenuSeparator />
+                  </>
+                )}
+
                 <DropdownMenuItem onClick={() => logOut()}>
                   <LogOutIcon className="mr-2 h-4 w-4" />
                   Sign Out
@@ -424,20 +454,51 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
-          {user.role === "facility_manager" && !isMobile && (
+          {user.role === "facility_manager" && (
             <div className="mx-2 mt-2">
-              {facilityLoading ? (
+              {fmLoading ? (
                 <div className="rounded-lg bg-sidebar-accent/40 px-3 py-2.5">
                   <Skeleton className="h-3 w-20 mb-1.5" />
                   <Skeleton className="h-4 w-32" />
                 </div>
-              ) : (facilityData as any)?.name ? (
+              ) : fmIsMultiFacility ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="w-full rounded-lg bg-sidebar-accent/40 px-3 py-2.5 text-left hover:bg-sidebar-accent/60 transition-colors">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <Building2 className="h-3.5 w-3.5 text-sidebar-primary" />
+                        <span className="text-xs uppercase tracking-wide text-sidebar-foreground/50">Your Facility</span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-semibold text-sidebar-foreground truncate">{fmActiveFacilityName || "Select Facility"}</p>
+                        <ChevronsUpDown className="h-4 w-4 text-sidebar-foreground/50 shrink-0 ml-1" />
+                      </div>
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-56">
+                    <DropdownMenuLabel>Switch facility</DropdownMenuLabel>
+                    {fmAllProfiles.map((profile: any) => (
+                      <DropdownMenuItem
+                        key={profile.facilityProfileId}
+                        onClick={() => fmSetActiveFacilityId(profile.facilityProfileId)}
+                      >
+                        {profile.facilityProfileId === fmActiveFacilityId ? (
+                          <CheckCircle className="mr-2 h-4 w-4 text-primary" />
+                        ) : (
+                          <span className="mr-6" />
+                        )}
+                        {profile.facilityName}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : fmActiveFacilityName ? (
                 <div className="rounded-lg bg-sidebar-accent/40 px-3 py-2.5">
                   <div className="flex items-center gap-1.5 mb-1">
                     <Building2 className="h-3.5 w-3.5 text-sidebar-primary" />
                     <span className="text-xs uppercase tracking-wide text-sidebar-foreground/50">Your Facility</span>
                   </div>
-                  <p className="text-sm font-semibold text-sidebar-foreground truncate">{(facilityData as any).name}</p>
+                  <p className="text-sm font-semibold text-sidebar-foreground truncate">{fmActiveFacilityName}</p>
                 </div>
               ) : null}
             </div>

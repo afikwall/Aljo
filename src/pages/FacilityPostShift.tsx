@@ -1,11 +1,9 @@
 import { useState, useEffect, useCallback } from "react";
-import { useUser, useEntityGetAll } from "@blocksdiy/blocks-client-sdk/reactSdk";
+import { useUser } from "@blocksdiy/blocks-client-sdk/reactSdk";
 import { useNavigate } from "react-router";
 import { getPageUrl } from "@/lib/utils";
-import {
-  FacilityManagerProfilesEntity,
-  LoginPage,
-} from "@/product-types";
+import { LoginPage } from "@/product-types";
+import { useFacilitySwitcher } from "@/hooks/useFacilitySwitcher";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -16,12 +14,8 @@ import { BulkPostForm } from "@/components/BulkPostForm";
 export default function FacilityPostShift() {
   const user = useUser();
   const navigate = useNavigate();
-  const { data: managerProfiles, isLoading: loadingProfile } = useEntityGetAll(
-    FacilityManagerProfilesEntity,
-    { email: user.email },
-    { enabled: !!user.email }
-  );
-  const managerProfile = managerProfiles?.[0];
+  const { activeProfile, isLoading: loadingProfile } = useFacilitySwitcher(user.email || "", user.isAuthenticated);
+  const managerProfile = activeProfile;
 
   const [mode, setMode] = useState<"single" | "bulk">("single");
 

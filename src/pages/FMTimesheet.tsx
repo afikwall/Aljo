@@ -3,7 +3,6 @@ import { useUser, useEntityGetAll } from "@blocksdiy/blocks-client-sdk/reactSdk"
 import { useNavigate } from "react-router";
 import { Link } from "react-router";
 import {
-  FacilityManagerProfilesEntity,
   StaffProfilesEntity,
   ShiftApplicationsEntity,
   ShiftsEntity,
@@ -11,6 +10,7 @@ import {
   LoginPage,
   FacilityDashboardPage,
 } from "@/product-types";
+import { useFacilitySwitcher } from "@/hooks/useFacilitySwitcher";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
@@ -47,13 +47,7 @@ export default function FMTimesheetPage() {
     }
   }, [user.isAuthenticated, navigate]);
 
-  const { data: fmProfiles, isLoading: loadingFmProfile } = useEntityGetAll(
-    FacilityManagerProfilesEntity,
-    { email: user.email },
-    { enabled: user.isAuthenticated }
-  );
-  const fmProfile = fmProfiles?.[0];
-  const facilityProfileId = fmProfile?.facilityProfileId;
+  const { activeProfile: fmProfile, activeFacilityId: facilityProfileId, isLoading: loadingFmProfile } = useFacilitySwitcher(user.email || "", user.isAuthenticated);
 
   const { data: completedShifts, isLoading: loadingShifts } = useEntityGetAll(
     ShiftsEntity,

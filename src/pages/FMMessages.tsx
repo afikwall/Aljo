@@ -13,12 +13,13 @@ import { toast } from "sonner";
 import {
   MessagesEntity,
   StaffProfilesEntity,
-  FacilityManagerProfilesEntity,
   FacilitiesEntity,
   ShiftsEntity,
   ShiftApplicationsEntity,
   OrientationsEntity,
+  FacilityManagerProfilesEntity,
 } from "@/product-types";
+import { useFacilitySwitcher } from "@/hooks/useFacilitySwitcher";
 import { ConversationCard } from "@/components/ConversationCard";
 import { ChatThread } from "@/components/ChatThread";
 import { ComposeMessageSheet } from "@/components/ComposeMessageSheet";
@@ -47,9 +48,7 @@ export default function FMMessages() {
   const { data: allMessages, isLoading: messagesLoading } =
     useEntityGetAll(MessagesEntity);
   const { data: staffProfiles } = useEntityGetAll(StaffProfilesEntity);
-  const { data: fmProfiles } = useEntityGetAll(FacilityManagerProfilesEntity, {
-    email: user.email,
-  });
+  const { activeProfile: myFmProfileFromSwitcher, activeFacilityId: myFacilityIdFromSwitcher } = useFacilitySwitcher(user.email || "", user.isAuthenticated);
   const { data: facilities } = useEntityGetAll(FacilitiesEntity);
   const { data: allShifts } = useEntityGetAll(ShiftsEntity);
   const { data: allShiftApplications } = useEntityGetAll(ShiftApplicationsEntity);
@@ -61,8 +60,8 @@ export default function FMMessages() {
     FacilityManagerProfilesEntity
   );
 
-  const myFmProfile = fmProfiles?.[0];
-  const myFacilityId = (myFmProfile as any)?.facilityProfileId;
+  const myFmProfile = myFmProfileFromSwitcher;
+  const myFacilityId = myFacilityIdFromSwitcher;
 
   // Update lastViewedMessagesDate when page loads
   useEffect(() => {

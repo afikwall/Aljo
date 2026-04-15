@@ -10,9 +10,9 @@ import { cn } from "@/lib/utils";
 
 import {
   InvoicesEntity,
-  FacilityManagerProfilesEntity,
   FacilitiesEntity,
 } from "@/product-types";
+import { useFacilitySwitcher } from "@/hooks/useFacilitySwitcher";
 
 import { FMInvoiceCard } from "@/components/FMInvoiceCard";
 import { FMInvoiceDetailSheet } from "@/components/FMInvoiceDetailSheet";
@@ -38,19 +38,9 @@ export default function FMInvoices() {
   const [selectedInvoice, setSelectedInvoice] = useState<InvoiceInstance | null>(null);
   const [detailSheetOpen, setDetailSheetOpen] = useState(false);
 
-  // Fetch FM profile by email to get facilityProfileId
-  const { data: fmProfilesRaw, isLoading: loadingFMProfile } = useEntityGetAll(
-    FacilityManagerProfilesEntity,
-    { email: user.email },
-    { enabled: user.isAuthenticated }
-  );
-
-  const fmProfile = useMemo(() => {
-    const profiles = (fmProfilesRaw as FMProfileInstance[] | undefined) || [];
-    return profiles[0] || null;
-  }, [fmProfilesRaw]);
-
-  const facilityProfileId = fmProfile?.facilityProfileId || "";
+  // Fetch FM profile via facility switcher
+  const { activeFacilityId, activeFacilityName: switcherFacilityName, isLoading: loadingFMProfile } = useFacilitySwitcher(user.email || "", user.isAuthenticated);
+  const facilityProfileId = activeFacilityId || "";
 
   // Fetch invoices for this facility
   const { data: invoicesRaw, isLoading: loadingInvoices } = useEntityGetAll(
