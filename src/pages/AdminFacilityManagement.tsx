@@ -32,7 +32,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Tooltip, TooltipContent, TooltipTrigger, TooltipProvider } from "@/components/ui/tooltip";
 import { Switch } from "@/components/ui/switch";
-import { Building2, DollarSign, UserCheck, Receipt, Plus, Edit2, ChevronRight, Lock, FileText, MapPin, MapPinOff, AlertTriangle, Search, Loader2 } from "lucide-react";
+import { Building2, DollarSign, UserCheck, Receipt, Plus, Edit2, ChevronRight, Lock, FileText, MapPin, MapPinOff, AlertTriangle, Search, Loader2, Info } from "lucide-react";
 import { GeofenceMapPreview } from "@/components/GeofenceMapPreview";
 import { useMemo, useState } from "react";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -425,7 +425,7 @@ export default function AdminFacilityManagementPage() {
       </Card>
 
       {/* Header */}
-      <div className={geotrackingEnabled ? "" : "opacity-50 pointer-events-none"}>
+      <div>
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Facility Management</h1>
@@ -498,6 +498,18 @@ export default function AdminFacilityManagementPage() {
                           No fence
                         </Badge>
                       )}
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <span className="flex items-center cursor-help">
+                              <Info className="h-3 w-3 text-muted-foreground" />
+                            </span>
+                          </TooltipTrigger>
+                          <TooltipContent side="top" className="max-w-[250px]">
+                            <p className="text-xs">Geofence is independent from Status. A facility can be Active with Geofence Off.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
                       {facility.contactName && (
                         <span className="text-xs text-muted-foreground flex items-center gap-1">
                           <UserCheck className="h-3 w-3" />
@@ -522,7 +534,21 @@ export default function AdminFacilityManagementPage() {
                 <TableHead>City</TableHead>
                 <TableHead>Province</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Geofence</TableHead>
+                <TableHead>
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <span className="flex items-center gap-1 cursor-help">
+                          Geofence
+                          <Info className="h-3 w-3 text-muted-foreground" />
+                        </span>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="max-w-[250px]">
+                        <p className="text-xs">Geofence is independent from Status. A facility can be Active with Geofence Off.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                </TableHead>
                 <TableHead>Managers</TableHead>
                 <TableHead>Contact</TableHead>
                 <TableHead className="w-12"></TableHead>
