@@ -1538,7 +1538,7 @@ export const FullStaffProfilePanel = ({
                 </div>
               ) : (
                 <iframe
-                  src={previewFile.signedUrl}
+                  src={`https://docs.google.com/viewer?url=${encodeURIComponent(previewFile.signedUrl)}&embedded=true`}
                   title={previewFile.name}
                   className="w-full rounded-lg border"
                   style={{ height: "70vh", minHeight: "500px" }}
