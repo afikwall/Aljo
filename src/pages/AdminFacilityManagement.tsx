@@ -175,11 +175,29 @@ export default function AdminFacilityManagementPage() {
     }
     setIsGeocoding(true);
     try {
-      const query = [facilityForm.address, facilityForm.city, facilityForm.province].filter(Boolean).join(", ");
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=1`
-      );
-      const results = await response.json();
+      const addressLower = facilityForm.address.toLowerCase();
+      const extraParts: string[] = [];
+      if (facilityForm.city && !addressLower.includes(facilityForm.city.toLowerCase())) {
+        extraParts.push(facilityForm.city);
+      }
+      if (facilityForm.province && !addressLower.includes(facilityForm.province.toLowerCase())) {
+        extraParts.push(facilityForm.province);
+      }
+      const fullQuery = [facilityForm.address, ...extraParts].join(", ");
+
+      const fetchResults = async (query: string) => {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&addressdetails=1&countrycodes=ca&q=${encodeURIComponent(query)}&limit=1`
+        );
+        return response.json();
+      };
+
+      let results = await fetchResults(fullQuery);
+
+      if (!results?.length && fullQuery !== facilityForm.address) {
+        results = await fetchResults(facilityForm.address);
+      }
+
       if (results?.length > 0) {
         const lat = parseFloat(results[0].lat);
         const lng = parseFloat(results[0].lon);
@@ -187,7 +205,7 @@ export default function AdminFacilityManagementPage() {
         setLastGeocodedAddress(facilityForm.address);
         toast.success("Coordinates found");
       } else {
-        toast.error("No results found for this address");
+        toast.error("No results found. Try entering just the street address without postal code, or enter coordinates manually.");
       }
     } catch {
       toast.error("Geocoding failed. Please try again.");
