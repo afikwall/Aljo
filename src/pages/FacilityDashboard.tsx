@@ -95,14 +95,6 @@ export default function FacilityDashboardPage() {
     { enabled: !!facilityProfileId }
   );
 
-  // Listen for facility switch events
-  useEffect(() => {
-    const handler = () => {
-      refetchShifts();
-    };
-    window.addEventListener("aljo_facility_changed", handler);
-    return () => window.removeEventListener("aljo_facility_changed", handler);
-  }, [refetchShifts]);
 
   // Fetch all staff profiles for the popup
   const { data: allStaffProfiles } = useEntityGetAll(StaffProfilesEntity);
@@ -296,7 +288,7 @@ export default function FacilityDashboardPage() {
   const postShiftPageUrl = getPageUrl(FacilityPostShiftPage);
 
   return (
-    <div className="space-y-6 p-4 md:p-6">
+    <div key={activeFacilityId} className="space-y-6 p-4 md:p-6">
       {/* Page Header */}
       <div>
         <h1 className="text-2xl md:text-3xl font-bold">Dashboard</h1>
